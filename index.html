@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>QR Generator — ₹10 Download</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<!-- LIVE: replace with your Razorpay key -->
+<!-- <script src="https://checkout.razorpay.com/v1/checkout.js"></script> -->
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ink:#1a1a2e;
+  --ink2:#2d2d4a;
+  --paper:#fafaf7;
+  --cream:#f4f3ee;
+  --gold:#c9a84c;
+  --gold2:#e8c876;
+  --green:#1a7a4a;
+  --red:#c0392b;
+  --border:#ddddd0;
+  --muted:#8a8a7a;
+  --text:#1a1a2e;
+  --radius:14px;
+}
+
+html{background:var(--paper);color:var(--text);font-family:'DM Sans',sans-serif;-webkit-font-smoothing:antialiased}
+
+body{min-height:100vh;padding:0 0 60px}
+
+/* ── TOP STRIP ── */
+.top-strip{background:var(--ink);color:#fff;text-align:center;padding:9px 16px;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;display:flex;align-items:center;justify-content:center;gap:8px}
+.top-strip .dot{width:6px;height:6px;background:var(--gold);border-radius:50%;animation:blink 2s ease infinite}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:36px 20px 28px;background:var(--paper);border-bottom:1px solid var(--border);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 60% at 50% 0%, rgba(201,168,76,.08) 0%, transparent 70%);pointer-events:none}
+.hero-label{display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3);border-radius:100px;padding:5px 14px;font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px}
+.hero h1{font-family:'Instrument Serif',serif;font-size:clamp(2rem,6vw,3.2rem);font-weight:400;color:var(--ink);line-height:1.1;letter-spacing:-.02em}
+.hero h1 em{font-style:italic;color:var(--gold)}
+.hero p{font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6}
+.price-pill{display:inline-flex;align-items:center;gap:5px;background:var(--green);color:#fff;border-radius:100px;padding:5px 16px;font-weight:600;font-size:13px;margin-top:14px}
+
+/* ── LAYOUT ── */
+.layout{max-width:860px;margin:0 auto;padding:24px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:620px){.layout{grid-template-columns:1fr;padding:16px 12px 0}}
+
+/* ── CARD ── */
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.card-head{padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.card-head-icon{width:28px;height:28px;background:var(--ink);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.card-head-icon svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:2}
+.card-head h2{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+.card-body-inner{padding:16px 18px}
+
+/* ── TABS ── */
+.tabs{display:flex;overflow-x:auto;padding:0 18px;border-bottom:1px solid var(--border);gap:2px;background:#fff;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:9px 10px;background:none;border:none;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:500;color:var(--muted);cursor:pointer;position:relative;letter-spacing:.02em;display:flex;align-items:center;gap:5px;transition:color .15s;white-space:nowrap}
+.tab svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.tab::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:var(--ink);transform:scaleX(0);transition:transform .2s}
+.tab.active{color:var(--ink);font-weight:600}
+.tab.active::after{transform:scaleX(1)}
+.tab[data-t="bike"].active,.tab[data-t="bike"].active::after{color:#e07b00}
+.tab[data-t="bike"]::after{background:#e07b00}
+.tab[data-t="car"].active{color:#7c3aed}
+.tab[data-t="car"]::after{background:#7c3aed}
+.tab[data-t="call"].active{color:var(--green)}
+.tab[data-t="call"]::after{background:var(--green)}
+
+/* ── FORM ── */
+.tab-panel{display:none}.tab-panel.active{display:block}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:5px;letter-spacing:.04em}
+.field input,.field textarea{width:100%;background:var(--cream);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field textarea:focus{border-color:var(--ink);box-shadow:0 0 0 3px rgba(26,26,46,.07)}
+.field input::placeholder,.field textarea::placeholder{color:#bbb}
+.field textarea{resize:none;height:88px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hint{font-size:10px;color:#aaa;margin-top:4px;font-family:'DM Mono',monospace}
+
+/* phone badge */
+.phone-ok{display:none;align-items:center;gap:6px;background:rgba(26,122,74,.07);border:1px solid rgba(26,122,74,.2);border-radius:8px;padding:7px 10px;margin-top:5px;font-family:'DM Mono',monospace;font-size:11px;color:var(--green)}
+.phone-ok.show{display:flex}
+.phone-ok svg{width:12px;height:12px;stroke:var(--green);fill:none;stroke-width:2.5;flex-shrink:0}
+.phone-err{display:none;align-items:center;gap:6px;background:rgba(192,57,43,.07);border:1px solid rgba(192,57,43,.2);border-radius:8px;padding:7px 10px;margin-top:5px;font-family:'DM Mono',monospace;font-size:11px;color:var(--red)}
+.phone-err.show{display:flex}
+.phone-err svg{width:12px;height:12px;stroke:var(--red);fill:none;stroke-width:2;flex-shrink:0}
+
+.sec-head{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;margin:10px 0 8px;font-weight:600}
+
+.note-box{background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.25);border-radius:9px;padding:9px 11px;font-size:11px;color:#7a6020;line-height:1.6;margin-bottom:12px}
+
+.btn-clear{width:100%;margin-top:8px;padding:9px;background:none;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;letter-spacing:.02em}
+.btn-clear:hover{border-color:var(--red);color:var(--red)}
+
+/* ── OUTPUT PANEL ── */
+.output-panel{display:flex;flex-direction:column;align-items:center}
+.qr-wrap{width:100%;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px 18px 14px;position:relative}
+
+.qr-empty{display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--border)}
+.qr-empty svg{width:56px;height:56px;opacity:.35}
+.qr-empty span{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center;line-height:1.8}
+
+/* Watermark wrapper */
+.qr-preview-wrap{position:relative;display:inline-block}
+.qr-preview-wrap canvas{display:block;border-radius:10px;border:5px solid #fff;box-shadow:0 4px 24px rgba(0,0,0,.12);animation:pop .3s cubic-bezier(.34,1.56,.64,1) both}
+.qr-watermark{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:10px;background:rgba(255,255,255,.55);backdrop-filter:blur(2px)}
+.qr-watermark-inner{transform:rotate(-22deg);font-family:'Instrument Serif',serif;font-size:16px;font-style:italic;color:rgba(26,26,46,.35);text-align:center;line-height:1.4;letter-spacing:.01em;pointer-events:none;user-select:none}
+
+.qr-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:8px;text-align:center}
+
+/* ── PAYMENT BOX ── */
+.pay-box{width:100%;border-top:1px solid var(--border);padding:16px 18px 18px;background:#fff}
+.pay-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.pay-title{font-size:12px;font-weight:600;color:var(--ink);text-transform:uppercase;letter-spacing:.06em}
+.pay-amount{font-family:'Instrument Serif',serif;font-size:22px;color:var(--green);font-weight:400}
+
+.upi-bar{display:flex;align-items:center;gap:8px;background:var(--cream);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;margin-bottom:12px}
+.upi-bar .upi-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);flex-shrink:0;text-transform:uppercase;letter-spacing:.06em}
+.upi-bar .upi-id{font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);font-weight:500;flex:1;word-break:break-all}
+.upi-bar .copy-upi{flex-shrink:0;background:var(--ink);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;letter-spacing:.04em;transition:background .15s}
+.upi-bar .copy-upi:hover{background:#2d2d4a}
+
+.btn-pay{width:100%;padding:13px;background:var(--ink);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;letter-spacing:.02em}
+.btn-pay:hover{background:#2d2d4a;transform:translateY(-1px);box-shadow:0 6px 20px rgba(26,26,46,.2)}
+.btn-pay:disabled{opacity:.45;pointer-events:none}
+.btn-pay svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2}
+.btn-pay .btn-gold{color:var(--gold2)}
+
+.or-divider{display:flex;align-items:center;gap:8px;margin:10px 0}
+.or-divider span{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.or-divider::before,.or-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* UPI QR mini */
+.upi-qr-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 0}
+.upi-qr-wrap canvas{border-radius:8px;border:4px solid #fff;box-shadow:0 2px 12px rgba(0,0,0,.1)}
+.upi-qr-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;line-height:1.6}
+
+/* ── VERIFY BOX ── */
+.verify-box{display:none;width:100%;border-top:1px solid var(--border);padding:16px 18px;background:rgba(26,122,74,.03)}
+.verify-box.show{display:block}
+.verify-box p{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6}
+.verify-row{display:flex;gap:8px}
+.verify-input{flex:1;background:var(--cream);border:1.5px solid var(--border);border-radius:9px;padding:9px 12px;font-family:'DM Mono',monospace;font-size:12px;color:var(--ink);outline:none;transition:border-color .15s}
+.verify-input:focus{border-color:var(--green)}
+.verify-input::placeholder{color:#bbb}
+.btn-verify{padding:9px 16px;background:var(--green);border:none;border-radius:9px;color:#fff;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;transition:all .15s}
+.btn-verify:hover{background:#15663c}
+.verify-err{font-size:11px;color:var(--red);margin-top:6px;font-family:'DM Mono',monospace;display:none}
+.verify-err.show{display:block}
+
+/* ── SUCCESS ── */
+.success-box{display:none;flex-direction:column;align-items:center;padding:20px 18px;background:rgba(26,122,74,.04);border-top:1px solid rgba(26,122,74,.15);gap:10px}
+.success-box.show{display:flex}
+.success-icon{width:44px;height:44px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:pop .4s cubic-bezier(.34,1.56,.64,1)}
+.success-icon svg{width:20px;height:20px;stroke:#fff;fill:none;stroke-width:2.5}
+.success-text{font-size:13px;font-weight:600;color:var(--green);text-align:center}
+.success-sub{font-size:11px;color:var(--muted);text-align:center;font-family:'DM Mono',monospace}
+.btn-download-final{width:100%;padding:13px;background:var(--green);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s}
+.btn-download-final:hover{background:#15663c;transform:translateY(-1px)}
+.btn-download-final svg{width:15px;height:15px;stroke:#fff;fill:none;stroke-width:2}
+
+/* ── HOW IT WORKS ── */
+.how{max-width:860px;margin:28px auto 0;padding:0 16px}
+.how h3{font-family:'Instrument Serif',serif;font-size:1.4rem;font-weight:400;font-style:italic;text-align:center;margin-bottom:18px;color:var(--ink)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:500px){.steps{grid-template-columns:1fr}}
+.step{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
+.step-num{font-family:'DM Mono',monospace;font-size:10px;color:var(--gold);font-weight:500;letter-spacing:.08em;margin-bottom:6px}
+.step-icon{font-size:24px;margin-bottom:6px}
+.step h4{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:4px}
+.step p{font-size:11px;color:var(--muted);line-height:1.6}
+
+/* ── FOOTER ── */
+.footer{text-align:center;padding:28px 16px 0;font-family:'DM Mono',monospace;font-size:10px;color:#bbb;letter-spacing:.06em}
+
+/* ── MODAL (demo payment) ── */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:center;justify-content:center;padding:16px}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:18px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.2);animation:pop .3s cubic-bezier(.34,1.56,.64,1)}
+.modal h3{font-family:'Instrument Serif',serif;font-size:1.5rem;margin-bottom:4px}
+.modal p{font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.6}
+.modal-amount{font-family:'DM Mono',monospace;font-size:32px;color:var(--green);font-weight:500;text-align:center;margin:16px 0}
+.modal-upi{background:var(--cream);border-radius:10px;padding:14px;margin-bottom:16px}
+.modal-upi-label{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px}
+.modal-upi-id{font-family:'DM Mono',monospace;font-size:14px;color:var(--ink);font-weight:500;word-break:break-all}
+.modal-note{font-size:11px;color:var(--muted);text-align:center;margin-bottom:16px;line-height:1.6;font-family:'DM Mono',monospace}
+.modal-actions{display:flex;gap:8px}
+.btn-modal-cancel{flex:1;padding:11px;background:none;border:1.5px solid var(--border);border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);cursor:pointer;transition:all .15s}
+.btn-modal-cancel:hover{border-color:var(--red);color:var(--red)}
+.btn-modal-done{flex:2;padding:11px;background:var(--green);border:none;border-radius:9px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;color:#fff;cursor:pointer;transition:all .15s}
+.btn-modal-done:hover{background:#15663c}
+
+@keyframes pop{from{opacity:0;transform:scale(.82)}to{opacity:1;transform:scale(1)}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+</style>
+</head>
+<body>
+
+<div class="top-strip"><span class="dot"></span> Free preview · Pay ₹10 to download your QR</div>
+
+<div class="hero">
+  <div class="hero-label">⚡ Instant · No Login · No Account</div>
+  <h1>QR Code<br/><em>Generator</em></h1>
+  <p>Fill the form · Pay ₹10 · Download your QR</p>
+  <div class="price-pill">
+    <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" width="13" height="13"><polyline points="20 6 9 17 4 12"/></svg>
+    Only ₹10 — one-time, no subscription
+  </div>
+</div>
+
+<div class="layout">
+
+  <!-- LEFT: Form -->
+  <div class="card" style="grid-row:span 2">
+    <div class="card-head">
+      <div class="card-head-icon"><svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg></div>
+      <h2>Step 1 — Fill Your Details</h2>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-t="url" onclick="switchTab('url',this)">
+        <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>URL
+      </button>
+      <button class="tab" data-t="text" onclick="switchTab('text',this)">
+        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Text
+      </button>
+      <button class="tab" data-t="contact" onclick="switchTab('contact',this)">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Contact
+      </button>
+      <button class="tab" data-t="call" onclick="switchTab('call',this)">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.62 3.38 2 2 0 0 1 3.59 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.56a16 16 0 0 0 6.29 6.29l.95-.95a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call
+      </button>
+      <button class="tab" data-t="bike" onclick="switchTab('bike',this)">
+        <svg viewBox="0 0 24 24"><circle cx="5.5" cy="17.5" r="3"/><circle cx="18.5" cy="17.5" r="3"/><path d="M5.5 17.5l3.5-7h6l2 4.5"/><path d="M12 10.5l2-4h2"/></svg>Bike
+      </button>
+      <button class="tab" data-t="car" onclick="switchTab('car',this)">
+        <svg viewBox="0 0 24 24"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="6" rx="1"/><path d="M5 9l1.5-4h11L19 9"/></svg>Car
+      </button>
+    </div>
+
+    <div class="card-body-inner">
+
+      <!-- URL -->
+      <div class="tab-panel active" id="tp-url">
+        <div class="field">
+          <label>Website / Link</label>
+          <input type="text" id="url-in" placeholder="example.com" oninput="handleInput()" autocomplete="off" spellcheck="false"/>
+          <p class="hint">https:// added automatically</p>
+        </div>
+      </div>
+
+      <!-- Text -->
+      <div class="tab-panel" id="tp-text">
+        <div class="field">
+          <label>Text Message</label>
+          <textarea id="text-in" placeholder="Enter any message or information…" oninput="handleInput()"></textarea>
+        </div>
+      </div>
+
+      <!-- Contact -->
+      <div class="tab-panel" id="tp-contact">
+        <div class="row2">
+          <div class="field"><label>First Name</label><input type="text" id="c-first" placeholder="Rahul" oninput="handleInput()"/></div>
+          <div class="field"><label>Last Name</label><input type="text" id="c-last" placeholder="Sharma" oninput="handleInput()"/></div>
+        </div>
+        <div class="field"><label>Phone</label><input type="tel" id="c-phone" placeholder="+919876543210" oninput="handleInput()"/></div>
+        <div class="field"><label>Email</label><input type="email" id="c-email" placeholder="rahul@email.com" oninput="handleInput()"/></div>
+        <div class="field"><label>Company</label><input type="text" id="c-org" placeholder="Company name" oninput="handleInput()"/></div>
+      </div>
+
+      <!-- Call -->
+      <div class="tab-panel" id="tp-call">
+        <div class="note-box">Scanning dials the owner directly — no typing needed.</div>
+        <div class="field">
+          <label>Phone Number (digits only)</label>
+          <input type="tel" id="call-ph" placeholder="+919876543210" oninput="livePhone('call-ph','cp-ok','cp-err');handleInput()" autocomplete="off"/>
+          <div class="phone-ok" id="cp-ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="cp-ok-t"></span></div>
+          <div class="phone-err" id="cp-err"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Use digits + country code only</div>
+        </div>
+        <div class="field"><label>Display Name</label><input type="text" id="call-name" placeholder="Rahul Sharma" oninput="handleInput()"/></div>
+      </div>
+
+      <!-- Bike -->
+      <div class="tab-panel" id="tp-bike">
+        <div class="note-box">QR dials owner instantly — great for parking & emergencies.</div>
+        <div class="sec-head">Owner</div>
+        <div class="field"><label>Name</label><input type="text" id="b-name" placeholder="Rahul Sharma" oninput="handleInput()"/></div>
+        <div class="field">
+          <label>Primary Phone (QR dials this)</label>
+          <input type="tel" id="b-ph" placeholder="+919876543210" oninput="livePhone('b-ph','bp-ok','bp-err');handleInput()" autocomplete="off"/>
+          <div class="phone-ok" id="bp-ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="bp-ok-t"></span></div>
+          <div class="phone-err" id="bp-err"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Digits + country code only</div>
+        </div>
+        <div class="field"><label>Alternate Phone</label><input type="tel" id="b-ph2" placeholder="+91..." oninput="handleInput()"/></div>
+        <div class="sec-head">Bike Details</div>
+        <div class="row2">
+          <div class="field"><label>Reg. No.</label><input type="text" id="b-reg" placeholder="MH12AB1234" oninput="handleInput()" style="text-transform:uppercase"/></div>
+          <div class="field"><label>Brand</label><input type="text" id="b-make" placeholder="Royal Enfield" oninput="handleInput()"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Model</label><input type="text" id="b-model" placeholder="Classic 350" oninput="handleInput()"/></div>
+          <div class="field"><label>Colour</label><input type="text" id="b-color" placeholder="Black" oninput="handleInput()"/></div>
+        </div>
+        <div class="field"><label>Emergency Note</label><input type="text" id="b-note" placeholder="Call if parked wrongly" oninput="handleInput()"/></div>
+      </div>
+
+      <!-- Car -->
+      <div class="tab-panel" id="tp-car">
+        <div class="note-box">Place on dashboard. Finders can call you instantly.</div>
+        <div class="sec-head">Owner</div>
+        <div class="field"><label>Name</label><input type="text" id="v-name" placeholder="Kuldeep" oninput="handleInput()"/></div>
+        <div class="field">
+          <label>Primary Phone (QR dials this)</label>
+          <input type="tel" id="v-ph" placeholder="+919876543210" oninput="livePhone('v-ph','vp-ok','vp-err');handleInput()" autocomplete="off"/>
+          <div class="phone-ok" id="vp-ok"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span id="vp-ok-t"></span></div>
+          <div class="phone-err" id="vp-err"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Digits + country code only</div>
+        </div>
+        <div class="field"><label>Alternate Phone</label><input type="tel" id="v-ph2" placeholder="+91..." oninput="handleInput()"/></div>
+        <div class="sec-head">Car Details</div>
+        <div class="row2">
+          <div class="field"><label>Reg. No.</label><input type="text" id="v-reg" placeholder="DL01CA1234" oninput="handleInput()" style="text-transform:uppercase"/></div>
+          <div class="field"><label>Brand</label><input type="text" id="v-make" placeholder="Maruti Suzuki" oninput="handleInput()"/></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Model</label><input type="text" id="v-model" placeholder="Swift" oninput="handleInput()"/></div>
+          <div class="field"><label>Colour</label><input type="text" id="v-color" placeholder="White" oninput="handleInput()"/></div>
+        </div>
+        <div class="field"><label>Emergency Note</label><input type="text" id="v-note" placeholder="Call if blocking" oninput="handleInput()"/></div>
+      </div>
+
+      <button class="btn-clear" onclick="clearAll()">✕  Clear All</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Output -->
+  <div style="display:flex;flex-direction:column;gap:0">
+    <div class="card output-panel" id="right-card">
+
+      <!-- Card header -->
+      <div class="card-head">
+        <div class="card-head-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+        <h2 id="right-head-text">Step 2 — Your QR Preview</h2>
+      </div>
+
+      <!-- ── STATE 0: Empty ── -->
+      <div id="state-empty" class="r-state" style="padding:40px 20px;display:flex;flex-direction:column;align-items:center;gap:12px;color:var(--border)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" style="width:56px;height:56px;opacity:.35">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+          <rect x="6" y="6" width="1" height="1" fill="currentColor"/><rect x="17" y="6" width="1" height="1" fill="currentColor"/><rect x="6" y="17" width="1" height="1" fill="currentColor"/>
+        </svg>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center;line-height:1.8">Fill the form to<br/>see your QR preview</span>
+      </div>
+
+      <!-- ── STATE 1: Blurred QR + Pay button ── -->
+      <div id="state-preview" class="r-state" style="display:none">
+        <!-- Blurred QR -->
+        <div style="display:flex;flex-direction:column;align-items:center;padding:24px 20px 8px;gap:10px">
+          <div style="position:relative;display:inline-block">
+            <img id="qr-blurred" src="my_qr.jpeg" alt="QR Preview"
+              style="width:200px;height:200px;border-radius:12px;border:6px solid #fff;box-shadow:0 4px 24px rgba(0,0,0,.13);display:block;object-fit:contain;filter:blur(7px);transition:filter .5s ease"/>
+            <div id="blur-badge" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;background:rgba(255,255,255,.45);backdrop-filter:blur(1px)">
+              <div style="background:var(--ink);color:#fff;border-radius:100px;padding:6px 16px;font-size:12px;font-weight:600;letter-spacing:.03em;box-shadow:0 2px 12px rgba(0,0,0,.18)">🔒 Pay ₹10 to unlock</div>
+            </div>
+          </div>
+          <p id="qr-type-label" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase"></p>
+        </div>
+
+        <!-- Pay button -->
+        <div style="padding:0 18px 18px">
+          <button id="btn-show-payment" onclick="showPayment()"
+            style="width:100%;padding:13px;background:var(--ink);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;letter-spacing:.02em">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:15px;height:15px"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Pay ₹10 &amp; Download QR
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STATE 2: Payment panel slides in ── -->
+      <div id="state-payment" class="r-state" style="display:none">
+        <!-- Blurred QR stays visible at top, smaller -->
+        <div style="display:flex;flex-direction:column;align-items:center;padding:20px 20px 0;gap:8px">
+          <div style="position:relative;display:inline-block">
+            <img src="my_qr.jpeg" alt="QR Preview"
+              style="width:160px;height:160px;border-radius:10px;border:5px solid #fff;box-shadow:0 3px 16px rgba(0,0,0,.1);display:block;object-fit:contain;filter:blur(6px)"/>
+            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;border-radius:7px;background:rgba(255,255,255,.4)">
+              <span style="background:var(--ink);color:#fff;border-radius:100px;padding:5px 14px;font-size:11px;font-weight:600">🔒 Locked</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Divider with arrow -->
+        <div style="display:flex;align-items:center;gap:10px;padding:14px 20px 0">
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Scan to pay ₹10</span>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <!-- Payment QR + UPI ID -->
+        <div style="display:flex;flex-direction:column;align-items:center;padding:14px 20px 0;gap:8px">
+          <img src="my_qr.jpeg" alt="Payment QR"
+            style="width:170px;height:170px;border-radius:12px;border:5px solid #fff;box-shadow:0 4px 20px rgba(0,0,0,.12);display:block;object-fit:contain"/>
+          <p style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-align:center;line-height:1.7">Scan with PhonePe · GPay · Paytm<br/>or any UPI app</p>
+
+          <!-- UPI ID copy bar -->
+          <div style="display:flex;align-items:center;gap:8px;background:var(--cream);border:1.5px solid var(--border);border-radius:9px;padding:8px 12px;width:100%;max-width:280px">
+            <span style="font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);flex-shrink:0;text-transform:uppercase;letter-spacing:.05em">UPI</span>
+            <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--ink);flex:1;word-break:break-all" id="upi-display">paytmqr5u7c0I@ptys</span>
+            <button onclick="copyUPI()" id="copy-upi-btn"
+              style="flex-shrink:0;background:var(--ink);color:#fff;border:none;border-radius:6px;padding:4px 10px;font-size:10px;font-family:'DM Mono',monospace;cursor:pointer;transition:background .15s">Copy</button>
+          </div>
+        </div>
+
+        <!-- UTR input box -->
+        <div style="padding:16px 20px 20px">
+          <div style="background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.25);border-radius:10px;padding:14px 14px 12px;margin-bottom:14px">
+            <p style="font-size:11px;color:#7a6020;line-height:1.7;font-family:'DM Mono',monospace">
+              After paying, open your UPI app → check payment history → copy the <strong>UTR / Transaction ID</strong> (12-digit number)
+            </p>
+          </div>
+          <label style="display:block;font-size:11px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.04em">UTR / Transaction ID</label>
+          <input id="utr-input" type="text" placeholder="e.g. 407812345678"
+            style="width:100%;background:var(--cream);border:1.5px solid var(--border);border-radius:9px;padding:10px 13px;font-family:'DM Mono',monospace;font-size:13px;color:var(--ink);outline:none;transition:border-color .15s;margin-bottom:10px"
+            oninput="document.getElementById('utr-err').style.display='none'"
+            onfocus="this.style.borderColor='var(--ink)'" onblur="this.style.borderColor='var(--border)'"/>
+          <p id="utr-err" style="display:none;font-size:11px;color:var(--red);font-family:'DM Mono',monospace;margin-bottom:8px">Please enter a valid UTR (minimum 6 characters)</p>
+          <button onclick="submitUTR()"
+            style="width:100%;padding:12px;background:var(--green);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" style="width:14px;height:14px"><polyline points="20 6 9 17 4 12"/></svg>
+            Submit &amp; Unlock QR
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STATE 3: Unlocked + Download ── -->
+      <div id="state-unlocked" class="r-state" style="display:none">
+        <!-- Unblurred QR -->
+        <div style="display:flex;flex-direction:column;align-items:center;padding:24px 20px 8px;gap:10px">
+          <div style="position:relative;display:inline-block">
+            <img src="my_qr.jpeg" alt="Your QR Code"
+              id="qr-unlocked-img"
+              style="width:200px;height:200px;border-radius:12px;border:6px solid #fff;box-shadow:0 4px 24px rgba(0,0,0,.13);display:block;object-fit:contain;animation:pop .4s cubic-bezier(.34,1.56,.64,1)"/>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;background:rgba(26,122,74,.08);border:1px solid rgba(26,122,74,.2);border-radius:100px;padding:5px 14px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5" style="width:12px;height:12px"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style="font-size:11px;font-weight:600;color:var(--green);font-family:'DM Mono',monospace">Payment Verified · QR Unlocked</span>
+          </div>
+        </div>
+
+        <!-- Download button -->
+        <div style="padding:0 18px 14px">
+          <button onclick="doDownload()"
+            style="width:100%;padding:13px;background:var(--green);border:none;border-radius:10px;color:#fff;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-bottom:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:15px;height:15px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Download QR — PNG
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STATE 4: Thank you ── -->
+      <div id="state-thanks" class="r-state" style="display:none;flex-direction:column;align-items:center;padding:32px 20px 28px;gap:12px;text-align:center">
+        <div style="width:52px;height:52px;background:var(--green);border-radius:50%;display:flex;align-items:center;justify-content:center;animation:pop .4s cubic-bezier(.34,1.56,.64,1)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" style="width:22px;height:22px"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <p style="font-family:'Instrument Serif',serif;font-size:1.4rem;color:var(--ink)">Thank you! 🎉</p>
+        <p style="font-size:12px;color:var(--muted);line-height:1.7;font-family:'DM Mono',monospace">Your QR has been downloaded.<br/>Print it, stick it, share it!</p>
+        <button onclick="resetAll()"
+          style="margin-top:8px;padding:10px 22px;background:var(--ink);border:none;border-radius:9px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s">
+          ← Generate Another QR
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div class="how">
+  <h3>How it works</h3>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01 —</div>
+      <div class="step-icon">📝</div>
+      <h4>Fill Your Details</h4>
+      <p>URL, text, contact card, bike/car owner QR — your choice</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02 —</div>
+      <div class="step-icon">💸</div>
+      <h4>Pay ₹10</h4>
+      <p>Scan UPI QR or copy UPI ID. Any UPI app works — PhonePe, GPay, Paytm</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03 —</div>
+      <div class="step-icon">⬇️</div>
+      <h4>Download PNG</h4>
+      <p>Clean, watermark-free high-res PNG card — ready to print or share</p>
+    </div>
+  </div>
+</div>
+
+<div class="footer">No data stored · No account needed · Made with ❤️ in India</div>
+
+
+<script>
+// ════════════════════════════════════════
+//  CONFIGURATION — CHANGE THESE
+// ════════════════════════════════════════
+const CONFIG = {
+  upiId:   'paytmqr5u7c0I@ptys',
+  upiName: 'Kuldeep Tripathi',
+  amount:  10,
+  razorpayKey: 'rzp_test_XXXX'
+};
+
+// ════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════
+let activeTab   = 'url';
+let currentData = '';
+let cardMeta    = {};
+let paid        = false;
+let dTimer;
+
+// ════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════
+// UPI display set via static HTML
+
+// ════════════════════════════════════════
+//  HELPERS
+// ════════════════════════════════════════
+const v = id => (document.getElementById(id)?.value || '').trim();
+
+function cleanPhone(raw) {
+  raw = raw.trim();
+  if (!raw) return '';
+  const plus = raw.startsWith('+') ? '+' : '';
+  return plus + raw.replace(/\D/g,'');
+}
+
+function isCleanPhone(raw) { return /^\+?[0-9]{6,15}$/.test(raw); }
+
+function livePhone(inputId, okId, errId) {
+  const raw = v(inputId);
+  const ok  = document.getElementById(okId);
+  const err = document.getElementById(errId);
+  const okt = document.getElementById(okId+'-t');
+  if (!raw) { ok.classList.remove('show'); err.classList.remove('show'); return; }
+  const cl = cleanPhone(raw);
+  if (isCleanPhone(cl)) {
+    ok.classList.add('show'); err.classList.remove('show');
+    if (okt) okt.textContent = 'Will dial: ' + cl;
+  } else {
+    ok.classList.remove('show'); err.classList.add('show');
+  }
+}
+
+function formatUrl(url) {
+  url = url.trim();
+  if (!url) return '';
+  if (!/^https?:\/\//i.test(url)) return 'https://' + url;
+  return url;
+}
+
+function buildVCard() {
+  const f=v('c-first'),l=v('c-last'),p=v('c-phone'),e=v('c-email'),o=v('c-org');
+  if (!f && !l && !p && !e) return '';
+  return `BEGIN:VCARD\nVERSION:3.0\nFN:${f} ${l}\nN:${l};${f};;;\nORG:${o}\nTEL:${p}\nEMAIL:${e}\nEND:VCARD`;
+}
+
+function buildCallQR() {
+  const phone = cleanPhone(v('call-ph'));
+  cardMeta = { type:'call', name:v('call-name'), phone };
+  return phone ? 'tel:'+phone : '';
+}
+
+function buildBikeQR() {
+  const phone = cleanPhone(v('b-ph'));
+  cardMeta = { type:'bike', name:v('b-name'), phone, phone2:v('b-ph2'), reg:v('b-reg').toUpperCase(), make:v('b-make'), model:v('b-model'), color:v('b-color'), note:v('b-note') };
+  return phone ? 'tel:'+phone : '';
+}
+
+function buildCarQR() {
+  const phone = cleanPhone(v('v-ph'));
+  cardMeta = { type:'car', name:v('v-name'), phone, phone2:v('v-ph2'), reg:v('v-reg').toUpperCase(), make:v('v-make'), model:v('v-model'), color:v('v-color'), note:v('v-note') };
+  return phone ? 'tel:'+phone : '';
+}
+
+function getData() {
+  cardMeta = {};
+  if (activeTab==='url')     return formatUrl(v('url-in'));
+  if (activeTab==='text')    return v('text-in');
+  if (activeTab==='contact') return buildVCard();
+  if (activeTab==='call')    return buildCallQR();
+  if (activeTab==='bike')    return buildBikeQR();
+  if (activeTab==='car')     return buildCarQR();
+  return '';
+}
+
+// ════════════════════════════════════════
+//  TABS
+// ════════════════════════════════════════
+function switchTab(tab, btn) {
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tp-'+tab).classList.add('active');
+  resetAll();
+  handleInput();
+}
+
+// ════════════════════════════════════════
+//  RENDER / STATE MACHINE
+//  States: empty → preview → payment → unlocked → thanks
+// ════════════════════════════════════════
+function handleInput() {
+  clearTimeout(dTimer);
+  dTimer = setTimeout(()=>{ currentData = getData(); renderQR(currentData); }, 120);
+}
+
+function setState(s) {
+  ['empty','preview','payment','unlocked','thanks'].forEach(id=>{
+    const el = document.getElementById('state-'+id);
+    if (el) el.style.display = (id===s) ? (id==='thanks'?'flex':'block') : 'none';
+  });
+}
+
+// Hidden canvas used to generate user's QR at high resolution
+let _qrCanvas = null;
+function getQRCanvas() {
+  if (!_qrCanvas) {
+    _qrCanvas = document.createElement('canvas');
+  }
+  return _qrCanvas;
+}
+
+function generateUserQR(text) {
+  // Renders user's data as QR onto hidden canvas, returns canvas
+  const c = getQRCanvas();
+  new QRious({ element: c, value: text, size: 700, background: 'white', foreground: '#1a1a2e', level: 'H', padding: 20 });
+  return c;
+}
+
+function renderQR(text) {
+  if (!text) { setState('empty'); paid = false; return; }
+
+  // Generate actual QR from user's data and show as blurred preview
+  const qrC = generateUserQR(text);
+
+  // Update blurred preview img from canvas
+  const blurImg = document.getElementById('qr-blurred');
+  if (blurImg) blurImg.src = qrC.toDataURL('image/png');
+
+  // Update label
+  const labelMap = {
+    url:'URL QR Code', text:'Text Message QR', contact:'vCard / Contact QR',
+    call:'Call QR — dials owner', bike:'Bike Owner QR', car:'Car Owner QR'
+  };
+  const lbl = document.getElementById('qr-type-label');
+  if (lbl) lbl.textContent = labelMap[activeTab] || 'QR Code';
+
+  if (!paid) setState('preview');
+}
+
+function showPayment() {
+  if (!currentData) return;
+  setState('payment');
+  document.getElementById('right-head-text').textContent = 'Step 3 — Scan & Pay ₹10';
+  setTimeout(()=>{ const el=document.getElementById('utr-input'); if(el) el.focus(); }, 300);
+}
+
+function submitUTR() {
+  const utr = (document.getElementById('utr-input').value || '').trim();
+  const err = document.getElementById('utr-err');
+  if (utr.length < 6) { err.style.display='block'; return; }
+  err.style.display = 'none';
+  paid = true;
+
+  // Show the unlocked state with the real unblurred QR
+  const qrC = generateUserQR(currentData);
+  const unblurImg = document.getElementById('qr-unlocked-img');
+  if (unblurImg) unblurImg.src = qrC.toDataURL('image/png');
+
+  setState('unlocked');
+  document.getElementById('right-head-text').textContent = 'Step 4 — Download Your QR';
+}
+
+function renderUpiQR() { /* payment QR is static my_qr.jpeg */ }
+
+// ════════════════════════════════════════
+//  DOWNLOAD — generates user's actual QR card
+// ════════════════════════════════════════
+function doDownload() {
+  if (!currentData || !paid) return;
+  const fname = `qr-${activeTab}-${Date.now()}.png`;
+  const isCard = ['call','bike','car'].includes(activeTab);
+  const qrC = generateUserQR(currentData); // user's actual QR canvas
+
+  if (isCard) {
+    _drawCard(qrC, cardMeta, fname);
+  } else {
+    // For URL/Text/Contact: just download the plain QR
+    qrC.toBlob(blob => triggerDownload(blob, fname), 'image/png');
+  }
+  setTimeout(()=>{ setState('thanks'); }, 800);
+}
+
+function triggerDownload(blob, fname) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = fname;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),4000);
+}
+
+function _drawCard(qrSource, m, fname) {
+  // qrSource = canvas element with user's generated QR
+  const W = 800;
+  const HEADER_H = 80;
+  const QR_PAD   = 48;          // padding around QR
+  const QR_SIZE  = W - QR_PAD * 2;   // 704px QR — very large, crisp
+  const FOOTER_H = 72;
+  const H = HEADER_H + QR_PAD + QR_SIZE + QR_PAD + FOOTER_H;
+
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+
+  // ── Background ─────────────────────────────────────────
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // ── Thin top colour bar ────────────────────────────────
+  const accent = m.type==='bike' ? '#e07b00' : m.type==='car' ? '#7c3aed' : '#1a7a4a';
+  ctx.fillStyle = accent;
+  ctx.fillRect(0, 0, W, HEADER_H);
+
+  // Header text — instruction only, NO personal info
+  const emoji = m.type==='bike' ? '🏍️' : m.type==='car' ? '🚗' : '📞';
+  ctx.font = 'bold 26px Arial';
+  ctx.fillStyle = '#ffffff';
+  ctx.textAlign = 'center';
+  ctx.fillText(emoji + '  SCAN QR TO CALL OWNER', W/2, 36);
+  ctx.font = '14px Arial';
+  ctx.fillStyle = 'rgba(255,255,255,.8)';
+  ctx.fillText('Point your phone camera at the QR code', W/2, 62);
+
+  // ── QR Code — large and crisp ──────────────────────────
+  // White padding box behind QR
+  ctx.fillStyle = '#f7f7f7';
+  roundRect(ctx, QR_PAD - 12, HEADER_H + QR_PAD - 12, QR_SIZE + 24, QR_SIZE + 24, 18);
+  ctx.fill();
+
+  if (qrSource) ctx.drawImage(qrSource, QR_PAD, HEADER_H + QR_PAD, QR_SIZE, QR_SIZE);
+
+  // ── Footer strip ───────────────────────────────────────
+  const footY = HEADER_H + QR_PAD + QR_SIZE + QR_PAD;
+  ctx.fillStyle = accent;
+  ctx.fillRect(0, footY, W, FOOTER_H);
+
+  // Optional: show reg number ONLY (not the phone — that's in the QR)
+  const label1 = m.reg ? m.reg : (m.note || '');
+  const label2 = m.make && m.model ? m.make + ' ' + m.model : '';
+
+  ctx.textAlign = 'center';
+  if (label1) {
+    ctx.font = 'bold 22px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(label1, W/2, footY + 28);
+  }
+  if (label2) {
+    ctx.font = '14px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,.75)';
+    ctx.fillText(label2, W/2, footY + 52);
+  }
+  if (!label1 && !label2) {
+    ctx.font = '14px Arial';
+    ctx.fillStyle = 'rgba(255,255,255,.75)';
+    ctx.fillText('Scan to contact owner', W/2, footY + 38);
+  }
+
+  c.toBlob(blob => triggerDownload(blob, fname), 'image/png');
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);
+  ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);
+  ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);
+  ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);
+  ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();
+}
+
+function copyUPI() {
+  navigator.clipboard.writeText(CONFIG.upiId).then(()=>{
+    const btn = document.getElementById('copy-upi-btn');
+    if (btn) { btn.textContent='Copied!'; setTimeout(()=>btn.textContent='Copy',2000); }
+  }).catch(()=>{});
+}
+
+function resetAll() {
+  paid = false;
+  currentData = '';
+  cardMeta = {};
+  setState('empty');
+  document.getElementById('right-head-text').textContent = 'Step 2 — Your QR Preview';
+  const ui = document.getElementById('utr-input');
+  if (ui) ui.value = '';
+}
+function clearAll() {
+  ['url-in','text-in','c-first','c-last','c-phone','c-email','c-org',
+   'call-ph','call-name','b-name','b-ph','b-ph2','b-reg','b-make','b-model','b-color','b-note',
+   'v-name','v-ph','v-ph2','v-reg','v-make','v-model','v-color','v-note']
+  .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  document.querySelectorAll('.phone-ok,.phone-err').forEach(el=>el.classList.remove('show'));
+  resetAll();
+}
+</script>
+</body>
+</html>
